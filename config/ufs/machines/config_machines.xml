@@ -115,7 +115,7 @@ This allows using a different mpirun command to launch unit tests
     <MPIRUN_RETRY_COUNT>10</MPIRUN_RETRY_COUNT>
     <OS>LINUX</OS>
     <COMPILERS>intel,gnu,pgi</COMPILERS>
-    <MPILIBS compiler="intel" >mpt,openmpi</MPILIBS>
+    <MPILIBS compiler="intel" >mpt,openmpi,intelmpi</MPILIBS>
     <MPILIBS compiler="pgi" >openmpi,mpt</MPILIBS>
     <MPILIBS compiler="gnu" >mpt,openmpi</MPILIBS>
     <CIME_OUTPUT_ROOT>/glade/scratch/$USER</CIME_OUTPUT_ROOT>
@@ -208,6 +208,11 @@ This allows using a different mpirun command to launch unit tests
         <command name="load">openmpi/3.1.4</command>
         <command name="load">netcdf/4.7.1</command>
       </modules>
+      <modules mpilib="intelmpi" compiler="intel">
+        <command name="load">impi/2019.2.187</command>
+        <command name="load">netcdf-mpi/4.6.3</command>
+        <command name="load">pnetcdf/1.11.1</command>
+      </modules>
       <modules>
 	<command name="load">ncarcompilers/0.5.0</command>
       </modules>
@@ -218,6 +223,10 @@ This allows using a different mpirun command to launch unit tests
       <modules mpilib="mpt" compiler="intel">
 	<command name="use">/glade/p/ral/jntp/GMTB/tools/modulefiles/intel-18.0.5/mpt-2.19</command>
 	<command name="load">NCEPlibs/1.0.0alpha01</command>
+      </modules>
+      <modules mpilib="intelmpi" compiler="intel">
+        <command name="use">/glade/work/turuncu/PROGS/modulefiles/esmfpkgs/intel/19.0.2</command>
+        <command name="load">esmf-8.1.0b10-ncdfio-intelmpi-O</command>
       </modules>
       <modules compiler="gnu" mpilib="mpi-serial">
 	<command name="load">netcdf/4.7.1</command>
