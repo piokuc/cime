@@ -43,6 +43,15 @@
       <grid name="atm">C768</grid>
     </model_grid>
 
+    <model_grid alias="r1135x633_dorian" >
+       <grid name="ocnice">r1135x633_dorian</grid>
+     </model_grid>
+
+    <model_grid alias="TL319_r1135x633_dorian">
+      <grid name="atm">TL319</grid>
+      <grid name="ocnice">r1135x633_dorian</grid>
+      <mask>gx1v7</mask>
+    </model_grid>
   </grids>
 
   <!-- ======================================================== -->
@@ -59,7 +68,6 @@
     </domain>
 
     <!-- fvcubed domains-->
-
     <domain name="C96">
       <nx>55296</nx> <ny>1</ny>
       <file grid="atm|lnd" mask="gx1v6">$DIN_LOC_ROOT/share/domains/domain.lnd.C96_gx1v6.181018.nc</file>
@@ -86,6 +94,19 @@
       <nx>3538944</nx> <ny>1</ny>
       <desc>C768 is a fvcubed 13 km resolution grid:</desc>
       <support>Experimental for fv3 dycore</support>
+    </domain>
+
+    <!-- domains for data atmosphere -->
+    <domain name="TL319">
+      <nx>640</nx> <ny>320</ny>
+      <mesh driver="nuopc">$DIN_LOC_ROOT/share/meshes/TL319_151007_ESMFmesh.nc</mesh>
+      <desc>TL319 grid for JRA55</desc>
+    </domain>
+
+    <!-- regional domains -->
+    <domain name="r1135x633_dorian">
+      <nx>1135</nx> <ny>633</ny>
+      <desc>HYCOM regional grid</desc>
     </domain>
   </domains>
 
