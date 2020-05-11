@@ -1,4 +1,4 @@
-"""Auxiliary functions to be used in MOM_RPS."""
+"""Auxiliary functions to be used in ParamGen and derived classes"""
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -74,7 +74,7 @@ def is_logical_expr(expr):
 
 def is_formula(expr):
     """
-    Returns True if expr is a MOM_RPS formula to evaluate. This is determined by
+    Returns True if expr is a ParamGen formula to evaluate. This is determined by
     checking whether expr is a string with a length of 1 or greater and if the
     first character of expr is '='.
 

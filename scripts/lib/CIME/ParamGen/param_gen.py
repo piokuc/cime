@@ -3,18 +3,15 @@ from collections import OrderedDict
 import os
 import abc
 import re
-from rps_utils import get_str_type, is_logical_expr, has_expandable_var, eval_formula
-from rps_utils import is_formula, eval_formula
+from param_gen_utils import (
+    get_str_type, is_logical_expr, has_expandable_var, eval_formula, is_formula, eval_formula
+)
 
-### MOM Runtime Parameter System Module =======================================
+### CIME Flexible Parameter Generator  =======================================
 
-class MOM_RPS(object,):
+class ParamGen(object,):
     """
-    Base class for MOM6 Runtime Parameter System manager that provides the following
-    three main functionalities:
-    * Read in an input file to generate data dictionary.
-    * Determine the values of expandable variables and evaluate formulas involving them.
-    * Infer the final values of parameters for a given CIME case instance
+    Base class for CIME Flexible Parameter Generator. 
 
     Attributes
     ----------
@@ -24,9 +21,9 @@ class MOM_RPS(object,):
     Methods
     -------
     from_json(input_path)
-        Reads in a given json input file and initializes a MOM_RPS object.
+        Reads in a given json input file and initializes a ParamGen object.
     from_yaml(input_path)
-        Reads in a given yalm input file and initializes a MOM_RPS object.
+        Reads in a given yalm input file and initializes a ParamGen object.
     expand_case_vars(case)
         Replaces case variables (e.g., $OCN_GRID) in self.data entries (both in keys and values)
         with their values (e.g, tx0.66v1) and evaluates formulas
@@ -37,18 +34,18 @@ class MOM_RPS(object,):
 
     def __init__(self, data_dict):
         assert type(data_dict) in [dict, OrderedDict], \
-            "MOM_RPS class requires a dict or OrderedDict as the initial data."
+            "ParamGen class requires a dict or OrderedDict as the initial data."
         self._data = data_dict
 
     @property
     def data(self):
-        """Returns the data attribute of the MOM_RPS instance."""
+        """Returns the data attribute of the ParamGen instance."""
         return self._data
 
     @classmethod
     def from_json(cls, input_path):
         """
-        Reads in a given json input file and initializes a MOM_RPS object.
+        Reads in a given json input file and initializes a ParamGen object.
 
         Parameters
         ----------
@@ -57,8 +54,8 @@ class MOM_RPS(object,):
 
         Returns
         -------
-        MOM_RPS
-            A MOM_RPS object with the data read from input_path.
+        ParamGen
+            A ParamGen object with the data read from input_path.
         """
 
         import json
@@ -69,7 +66,7 @@ class MOM_RPS(object,):
     @classmethod
     def from_yaml(cls, input_path):
         """
-        Reads in a given yaml input file and initializes a MOM_RPS object.
+        Reads in a given yaml input file and initializes a ParamGen object.
 
         Parameters
         ----------
@@ -78,8 +75,8 @@ class MOM_RPS(object,):
 
         Returns
         -------
-        MOM_RPS
-            A MOM_RPS object with the data read from input_path.
+        ParamGen
+            A ParamGen object with the data read from input_path.
         """
 
         import yaml
