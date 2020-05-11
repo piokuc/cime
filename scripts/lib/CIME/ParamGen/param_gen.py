@@ -165,10 +165,9 @@ class ParamGen(object,):
 
 
     def infer_values(self, case):
-        """ For a variable, if multiple values are provided in a value list, this function
-            determines the appropriate value for the case by looking at guards
-            to the left of values in yaml file and by comparing them against
-            the xml variable of the case, e.g. OCN_GRID."""
+        """ For a particular variable, if multiple dictionary entries are provided, this
+            function determines the ultimate value for the case by evaluating the guards, i.e.,
+            the keys of the dictionary entries."""
 
         if not self._data:
             raise RuntimeError("Cannot apply the guards. No data found.")
@@ -189,8 +188,8 @@ class ParamGen(object,):
 
         def _do_determine_value(multi_option_dict):
             """ From an ordered dict (multi_option_dict), whose entries are alternative values
-                with guards, returns the last entry whose guards are satisfied
-                by the case"""
+                with logical guards, returns the last entry whose guards are satisfied
+                by the case configuration (xml vars)."""
 
             assert _is_guarded_entry(multi_option_dict)
             assert type(multi_option_dict) in [dict, OrderedDict]
@@ -214,8 +213,8 @@ class ParamGen(object,):
 
 
         def _is_guarded_entry(entry):
-            """ returns true if a given dictionary has entries that consist of
-                conditional (possibly with alternatives), i.e., guarded entries"""
+            """ returns True if a given dictionary has entries that consist of
+                conditional(s), i.e., guarded entries"""
 
             assert type(entry) in [dict, OrderedDict]
 
