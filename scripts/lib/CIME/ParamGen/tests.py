@@ -2,7 +2,7 @@
 
 import os
 import argparse
-from FType_namelist import FType_namelist
+from ftype_namelist import FTypeNamelist
 
 try:
     import yaml
@@ -57,7 +57,7 @@ def fortran_nml_test(write_directory:str):
     data_dict = yaml.safe_load(input_nml_yaml)
 
     # Create a ParamGen object with the above yaml data:
-    input_nml_obj = FType_namelist(data_dict)
+    input_nml_obj = FTypeNamelist(data_dict)
 
     # write out the input.nml file:
     nml_file_path = os.path.join(write_directory, "input.nml")

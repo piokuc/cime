@@ -1,7 +1,7 @@
 import os
 from param_gen import ParamGen
 
-class FType_namelist(ParamGen):
+class FTypeNamelist(ParamGen):
     """Derived ParamGen class to generate Fortran namelist input files"""
 
     def _validate_schema(self, data_dict):
