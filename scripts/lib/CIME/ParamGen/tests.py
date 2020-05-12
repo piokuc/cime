@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''ParamGen Tests'''
 
 import os
@@ -8,6 +10,7 @@ try:
     import yaml
 except ModuleNotFoundError:
     print("Cannot import yaml. Exiting...")
+    exit()
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('-w', metavar='write_directory', type=str, required=True,
@@ -34,7 +37,7 @@ dummy_case = DummyCase({
     })
 
 # Test Fortran namelist generator:
-def fortran_nml_test(write_directory:str):
+def fortran_nml_test(write_directory):
 
     # An example yaml file to generate default input.nml file for FMS:
     input_nml_yaml = \
