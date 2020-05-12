@@ -1,15 +1,18 @@
 from __future__ import print_function
 from collections import OrderedDict
 import os
-import abc
 import re
+from abc import ABC, abstractmethod
+from copy import deepcopy
+
 from param_gen_utils import (
-    get_str_type, is_logical_expr, has_expandable_var, eval_formula, is_formula, eval_formula
+    get_str_type, is_logical_expr, has_expandable_var,
+    eval_formula, is_formula, eval_formula
 )
 
 ### CIME Flexible Parameter Generator  =======================================
 
-class ParamGen(object,):
+class ParamGen(ABC):
     """
     Base class for CIME Flexible Parameter Generator. 
 
@@ -35,7 +38,8 @@ class ParamGen(object,):
     def __init__(self, data_dict):
         assert type(data_dict) in [dict, OrderedDict], \
             "ParamGen class requires a dict or OrderedDict as the initial data."
-        self._data = data_dict
+        self._validate_schema(data_dict)
+        self._data = deepcopy(data_dict)
 
     @property
     def data(self):
@@ -260,7 +264,15 @@ class ParamGen(object,):
         for key, val in self._data.items():
             self._data[key] = _eval_formula_recursive(val)
 
+    @abstractmethod
+    def write(self, data_dict):
+        ''' This is an abstract method to be implemented in the derived class. All derived
+        ParamGen classes must define a write method in accordance with the associated syntax. '''
+        pass
 
-    @abc.abstractmethod
-    def check_consistency(self):
+    @abstractmethod
+    def _validate_schema(self, data_dict):
+        ''' This is an abstract method to be implemented in the derived class. All derived
+        ParamGen classes must define a schema validation method in accordance with the associated
+        syntax. '''
         pass
