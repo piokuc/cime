@@ -342,6 +342,9 @@ def _archive_restarts_date(case, casename, rundir, archive,
     """
     logger.info('-------------------------------------------')
     logger.info('Archiving restarts for date {}'.format(datename))
+    logger.debug('last date {}'.format(last_date))
+    logger.debug('date is last? {}'.format(datename_is_last))
+    logger.debug('components are {}'.format(components))
     logger.info('-------------------------------------------')
     logger.debug("last date: {}".format(last_date))
 
@@ -431,10 +434,10 @@ def _archive_restarts_date_comp(case, casename, rundir, archive, archive_entry,
             pfile = re.compile(pattern)
             restfiles = [f for f in files if pfile.search(f)]
             logger.debug("pattern is {} restfiles {}".format(pattern, restfiles))
-        for restfile in restfiles:
-            restfile = os.path.basename(restfile)
+        for rfile in restfiles:
+            rfile = os.path.basename(rfile)
 
-            file_date = get_file_date(restfile)
+            file_date = get_file_date(rfile)
             if last_date is not None and file_date > last_date:
                 # Skip this file
                 continue
@@ -445,7 +448,7 @@ def _archive_restarts_date_comp(case, casename, rundir, archive, archive_entry,
             # obtain array of history files for restarts
             # need to do this before archiving restart files
             histfiles_for_restart = get_histfiles_for_restarts(rundir, archive,
-                                                               archive_entry, restfile,
+                                                               archive_entry, rfile,
                                                                testonly=testonly)
 
             if datename_is_last and histfiles_for_restart:
@@ -456,8 +459,8 @@ def _archive_restarts_date_comp(case, casename, rundir, archive, archive_entry,
             # archive restart files and all history files that are needed for restart
             # Note that the latest file should be copied and not moved
             if datename_is_last:
-                srcfile = os.path.join(rundir, restfile)
-                destfile = os.path.join(archive_restdir, restfile)
+                srcfile = os.path.join(rundir, rfile)
+                destfile = os.path.join(archive_restdir, rfile)
                 last_restart_file_fn(srcfile, destfile)
                 logger.info("{} file {} to {}".format(last_restart_file_fn_msg, srcfile, destfile))
                 for histfile in histfiles_for_restart:
@@ -471,8 +474,8 @@ def _archive_restarts_date_comp(case, casename, rundir, archive, archive_entry,
             else:
                 # Only archive intermediate restarts if requested - otherwise remove them
                 if case.get_value('DOUT_S_SAVE_INTERIM_RESTART_FILES'):
-                    srcfile = os.path.join(rundir, restfile)
-                    destfile = os.path.join(archive_restdir, restfile)
+                    srcfile = os.path.join(rundir, rfile)
+                    destfile = os.path.join(archive_restdir, rfile)
                     expect(os.path.isfile(srcfile),
                            "restart file {} does not exist ".format(srcfile))
                     archive_file_fn(srcfile, destfile)
@@ -566,7 +569,7 @@ def _archive_restarts_date_comp(case, casename, rundir, archive, archive_entry,
 
 
                     else:
-                        srcfile = os.path.join(rundir, restfile)
+                        srcfile = os.path.join(rundir, rfile)
                         logger.info("removing interim restart file {}".format(srcfile))
                         if (os.path.isfile(srcfile)):
                             try:
@@ -707,6 +710,7 @@ def case_st_archive(self, last_date_str=None, archive_incomplete_logs=True, copy
     """
     Create archive object and perform short term archiving
     """
+    logger.debug("resubmit {}".format(resubmit))
     caseroot = self.get_value("CASEROOT")
     self.load_env(job="case.st_archive")
     if last_date_str is not None:
@@ -741,18 +745,19 @@ def case_st_archive(self, last_date_str=None, archive_incomplete_logs=True, copy
     logger.info("st_archive completed")
 
     # resubmit case if appropriate
-    resubmit_cnt = self.get_value("RESUBMIT")
-    logger.debug("resubmit_cnt {} resubmit {}".format(resubmit_cnt, resubmit))
-    if resubmit_cnt > 0 and resubmit:
-        logger.info("resubmitting from st_archive, resubmit={:d}".format(resubmit_cnt))
-        if self.get_value("MACH") == "mira":
-            expect(os.path.isfile(".original_host"), "ERROR alcf host file not found")
-            with open(".original_host", "r") as fd:
-                sshhost = fd.read()
-            run_cmd("ssh cooleylogin1 ssh {} '{case}/case.submit {case} --resubmit' "\
+    if not self.get_value("EXTERNAL_WORKFLOW"):
+        resubmit_cnt = self.get_value("RESUBMIT")
+        logger.debug("resubmit_cnt {} resubmit {}".format(resubmit_cnt, resubmit))
+        if resubmit_cnt > 0 and resubmit:
+            logger.info("resubmitting from st_archive, resubmit={:d}".format(resubmit_cnt))
+            if self.get_value("MACH") == "mira":
+                expect(os.path.isfile(".original_host"), "ERROR alcf host file not found")
+                with open(".original_host", "r") as fd:
+                    sshhost = fd.read()
+                run_cmd("ssh cooleylogin1 ssh {} '{case}/case.submit {case} --resubmit' "\
                         .format(sshhost, case=caseroot), verbose=True)
-        else:
-            self.submit(resubmit=True)
+            else:
+                self.submit(resubmit=True)
 
     return True
 
