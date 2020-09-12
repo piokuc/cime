@@ -582,7 +582,7 @@
     </submit_args>
     <directives>
       <directive                       > -R "span[ptile={{ tasks_per_node }}]"</directive>
-    </directives>
+   </directives>
     <queues>
       <queue walltimemin="00:00" walltimemax="02:00" default="true">p_short</queue>
       <queue walltimemin="02:00" walltimemax="04:00">p_medium</queue>
