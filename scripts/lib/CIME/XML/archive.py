@@ -27,7 +27,7 @@ class Archive(ArchiveBase):
         components_node = env_archive.make_child("components", attributes={"version":"2.0"})
 
         model = get_model()
-        if 'drv' not in components:
+        if 'drv' not in components and model != 'ufs':
             components.append('drv')
         if 'dart' not in components and model == 'cesm':
             components.append('dart')
@@ -60,22 +60,14 @@ class Archive(ArchiveBase):
         component_nodes = files.get_children("value", root=files.get_child("values", root=archive_spec_node))
         config_archive_files = []
         for comp in component_nodes:
-            compval = self.text(comp)
-            if "COMP_ROOT_DIR" in compval:
-                search = re.search(r"\$(COMP_ROOT_DIR_[^\/]+)", compval)
-                if search:
-                    match = search.group(1)
-                    comp_root_dir_node = files.get_child("entry", {"id": match})
-                    new_component_nodes = files.get_children("value",
-                                                             root=files.get_child("values", root=comp_root_dir_node))
-                    for new_comp in new_component_nodes:
-                        newcompval = re.sub(r"\$COMP_ROOT_DIR_[^\/]+", self.text(new_comp), compval)
-                        newcompval = files.get_resolved_value(newcompval)
-                        if os.path.isfile(newcompval):
-                            config_archive_files.append(newcompval)
+            attr = self.get(comp,"component")
+            if attr:
+                compval = files.get_value("ARCHIVE_SPEC_FILE", attribute={"component":attr})
             else:
-                compval = files.get_resolved_value(self.text(comp))
-                if os.path.isfile(compval):
-                    config_archive_files.append(compval)
+                compval = self.get_resolved_value(self.text(comp))
 
-        return list(set(config_archive_files))
+            if os.path.isfile(compval):
+                config_archive_files.append(compval)
+
+        config_archive_files = list(set(config_archive_files))
+        return config_archive_files
