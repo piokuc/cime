@@ -266,6 +266,7 @@ class Case(object):
         if not os.path.isdir(self._caseroot):
             # do not flush if caseroot wasnt created
             return
+
         for env_file in self._files:
             env_file.write(force_write=flushall)
 
@@ -458,8 +459,16 @@ class Case(object):
         logger.debug(" Possible components for COMPSETS_SPEC_FILE are {}".format(components))
 
         self.set_lookup_value("COMP_INTERFACE", driver)
-        if self._cime_model == 'cesm':
+        if self._cime_model == 'ufs':
+            ufs_driver = os.environ.get("UFS_DRIVER")
+            attribute = None
+            if ufs_driver:
+                attribute = {"component":"nems"}
+            comp_root_dir_cpl = files.get_value("COMP_ROOT_DIR_CPL", attribute=attribute)
+        elif self._cime_model == 'cesm':
             comp_root_dir_cpl = files.get_value("COMP_ROOT_DIR_CPL")
+
+        if self._cime_model in ('cesm','ufs'):
             self.set_lookup_value("COMP_ROOT_DIR_CPL",comp_root_dir_cpl)
 
         # Loop through all of the files listed in COMPSETS_SPEC_FILE and find the file
@@ -485,6 +494,7 @@ class Case(object):
 
         # Fill in compset name
         self._compsetname, self._components = self.valid_compset(self._compsetname, compset_alias, files)
+
         # if this is a valiid compset longname there will be at least 7 components.
         components = self.get_compset_components()
         expect(len(components) > 6, "No compset alias {} found and this does not appear to be a compset longname.".format(compset_name))
@@ -519,6 +529,9 @@ class Case(object):
             primary_component = "allactive"
         elif progcomps["LND"] and progcomps["OCN"] and progcomps["ICE"]:
             # this is a "J" compset
+            primary_component = "allactive"
+        elif progcomps["ATM"] and progcomps["OCN"] and progcomps["ICE"]:
+            # this is a ufs s2s compset
             primary_component = "allactive"
         elif progcomps["ATM"]:
             if "DOCN%SOM" in self._compsetname and progcomps["LND"]:
@@ -614,6 +627,7 @@ class Case(object):
     # is handled consistenly, this should not affect functionality.
     # Note: interstitial digits are included (e.g., in FV3GFS).
     __mod_match_re__ = re.compile(r"([^%]*[^0-9%]+)")
+
     def valid_compset(self, compset_name, compset_alias, files):
         """Add stub models missing in <compset_name>, return full compset name.
         <files> is used to collect set of all supported components.
@@ -764,16 +778,18 @@ class Case(object):
             comp_name  = self._components[i-1]
             root_dir_node_name = 'COMP_ROOT_DIR_' + comp_class
             node_name = 'CONFIG_' + comp_class + '_FILE'
-            comp_root_dir = files.get_value(root_dir_node_name, {"component":comp_name}, resolved=False)
+            compatt = {"component":comp_name}
+            comp_root_dir = files.get_value(root_dir_node_name, compatt, resolved=False)
             if comp_root_dir is not None:
                 self.set_value(root_dir_node_name, comp_root_dir)
 
-            compatt = {"component":comp_name}
             # Add the group and elements for the config_files.xml
+
             comp_config_file = files.get_value(node_name, compatt, resolved=False)
             expect(comp_config_file is not None,"No component {} found for class {}".format(comp_name, comp_class))
             self.set_value(node_name, comp_config_file)
             comp_config_file =  files.get_value(node_name, compatt)
+
             expect(comp_config_file is not None and os.path.isfile(comp_config_file),
                    "Config file {} for component {} not found.".format(comp_config_file, comp_name))
             compobj = Component(comp_config_file, comp_class)
@@ -848,6 +864,7 @@ class Case(object):
         mach_pes_obj.add_comment(comment)
 
         if other is not None:
+            logger.info("setting additional fields from config_pes: {}".format(other))
             for key, value in other.items():
                 self.set_value(key, value)
 
@@ -917,7 +934,6 @@ class Case(object):
         grids = Grids(gridfile)
 
         gridinfo = grids.get_grid_info(name=grid_name, compset=self._compsetname, driver=driver)
-
         self._gridname = gridinfo["GRID"]
         for key,value in gridinfo.items():
             logger.debug("Set grid {} {}".format(key,value))
@@ -926,6 +942,7 @@ class Case(object):
         #--------------------------------------------
         # component config data
         #--------------------------------------------
+
         self._get_component_config_data(files, driver=driver)
 
         # This needs to be called after self.set_comp_classes, which is called
@@ -1088,14 +1105,17 @@ class Case(object):
         env_batch = self.get_env("batch")
 
         batch_system_type = machobj.get_value("BATCH_SYSTEM")
+
         logger.info("Batch_system_type is {}".format(batch_system_type))
         batch = Batch(batch_system=batch_system_type, machine=machine_name, files=files,
                       extra_machines_dir=extra_machines_dir)
+
         workflow = Workflow(files=files)
-        bjobs = workflow.get_workflow_jobs(machine=machine_name, workflowid=workflowid)
-        env_workflow = self.get_env("workflow")
 
         env_batch.set_batch_system(batch, batch_system_type=batch_system_type)
+
+        bjobs = workflow.get_workflow_jobs(machine=machine_name, workflowid=workflowid)
+        env_workflow = self.get_env("workflow")
         env_workflow.create_job_groups(bjobs, test)
 
         if walltime:
@@ -1490,9 +1510,9 @@ directory, NOT in this subdirectory."""
             #   called if run_unsupported is False.
             tests = Testlist(tests_spec_file, files)
             testlist = tests.get_tests(compset=compset_alias, grid=grid_name, supported_only=True)
-            test_categories = ["prealpha", "prebeta", "test_release", "aux_"]
+            test_categories = ["prealpha", "prebeta", "test_release"]
             for test in testlist:
-                if test["category"] in test_categories \
+                if test["category"] in test_categories or "aux_" in test["category"] \
                    or get_cime_default_driver() in test["category"]:
                     testcnt += 1
         if testcnt > 0:
@@ -1602,6 +1622,16 @@ directory, NOT in this subdirectory."""
             self.set_lookup_value("CASE", os.path.basename(casename))
             self.set_lookup_value("CASEROOT", self._caseroot)
             self.set_lookup_value("SRCROOT", srcroot)
+            # if the top level user_mods_dir contains a config_grids.xml file and
+            # gridfile was not set on the command line, use it.
+            if user_mods_dir:
+                um_config_grids = os.path.join(user_mods_dir,"config_grids.xml")
+                if os.path.exists(um_config_grids):
+                    if gridfile:
+                        logger.warning("A config_grids file was found in {} but also provided on the command line {}, command line takes precident".format(um_config_grids, gridfile))
+                    else:
+                        gridfile = um_config_grids
+
 
             # Configure the Case
             self.configure(compset_name, grid_name, machine_name=machine_name,
