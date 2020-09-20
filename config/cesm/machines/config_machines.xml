@@ -2689,6 +2689,9 @@ This allows using a different mpirun command to launch unit tests
       <env name="I_MPI_SHM">skx_avx512</env>
       <env name="I_MPI_HYDRA_BOOTSTRAP">lsf</env>
       <!--<env name="FI_PROVIDER">mlx</env>-->
+    </environment_variables>
+  </machine>
+
   <machine MACH="thunder">
     <DESC>NCAR ARM platform, os is Linux, 64/128 pes/node, batch system is SLURM</DESC>
     <NODENAME_REGEX>.*.thunder.ucar.edu</NODENAME_REGEX>
